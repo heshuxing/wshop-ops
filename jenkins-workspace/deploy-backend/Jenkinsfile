@@ -1,0 +1,71 @@
+import com.cloudbees.groovy.cps.NonCPS
+
+String packages_path = "/opt/wshop/wshop-0.0.1/images"
+String shell_path = "/opt/wshop/wshop-0.0.1/bin"
+@NonCPS
+def getBuildUser() {
+    return currentBuild.rawBuild.getCause(Cause.UserIdCause).getUserId()
+}
+
+pipeline {
+    agent any
+    parameters {
+        choice(name: "ENV", choices: ["dev", "prod"], description: "请选择升级环境名，默认为 dev")
+        choice(name: "MODULE", choices: ["wshop-core"], description: "请选择要升级的模块")
+        string(name: "BRANCH", defaultValue: "develop", description: "请填写升级分支名, 默认为 develop", trim: true)
+    }
+    options {
+        timeout(time: 100, unit: "MINUTES")
+    }
+    stages {
+        stage("Entering directory") {
+            steps {
+                script {
+                    dir("jenkins-workspace/deploy-backend") {
+                        stage("Authentication") {
+                            def userId = getBuildUser()
+                            if (params.ENV.equals("prod")) {
+                                if (!['heshuxing'].contains(userId)) {
+                                    error "该用户: $userId 没有足够的权限构建 ${ENV} 环境, 请联系管理员"
+                                }
+                            }
+                            echo "权限校验成功, 继续构建..."
+                        }
+                        stage("Create build directory") {
+                            if (params.ENV.equals("dev")) {
+                                remotes = [
+                                        [name: "test", host: "172.24.3.82", port: 3222, user: "lowcode", allowAnyHosts: true]
+                                ]
+                            } else if (params.ENV.equals("prod")) {
+                                remotes = [
+                                        [name: "dev", host: "172.18.1.26", port: 3222, user: "lowcode", allowAnyHosts: true]
+                                ]
+                            }
+                            else {
+                                error "Unknown ${ENV}!"
+                            }
+                            sh "mkdir wshop-core || true"
+                        }
+                        stage("Checkout service") {
+                            checkout([$class: "GitSCM", branches: [[name: "*/${BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: "4dcdb044-9782-4d1e-9192-0757fb5ea74b", url: "http://git.baifendian.com/lowcode/lowcode-service.git"]]])
+                        }
+                    }
+                    dir("jenkins-workspace/deploy-backend/wshop-core") {
+                        stage("mvn package") {
+                            if (params.MODULE.equals("wshop-core")) {
+                                sh "mvn clean package || exit 1"
+                            }
+                            else {
+                                error "Unknow ${MODULE}"
+                            }
+                        }
+                        stage("get version") {
+                            CORE_TAG = sh(returnStdout: true, script: "IFS='-' read -ra ADDR <<< \$(basename target/*.tar.gz .tar.gz); echo \${ADDR[-1]}").trim()
+                            sh "echo ${CORE_TAG}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
