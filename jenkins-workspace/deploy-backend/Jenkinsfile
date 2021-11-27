@@ -14,6 +14,7 @@ pipeline {
         choice(name: "ENV", choices: ["prod"], description: "请选择升级环境名，默认为 prod")
         choice(name: "MODULE", choices: ["wshop-core"], description: "请选择要升级的模块")
         string(name: "BRANCH", defaultValue: "master", description: "请填写升级分支名, 默认为 master", trim: true)
+        string(name: "VERSION", description: "请填写版本，X.Y.Z", trim: true)
     }
     options {
         timeout(time: 100, unit: "MINUTES")
@@ -47,11 +48,17 @@ pipeline {
                                 error "Unknow ${MODULE}"
                             }
                         }
-                    }
-                    dir("jenkins-workspace/deploy-backend/wshop-core") {
-                        stage("get version") {
-                            CORE_TAG = sh(encoding: 'UTF-8',returnStdout: true, script: "IFS='-' read -ra ADDR <<< \$(basename target/*.tar.gz .tar.gz); echo \${ADDR[-1]}").trim()
-                            sh "echo ${CORE_TAG}"
+                        stage("Replace Dockerfile") {
+                            sh "echo ${VERSION}"
+                            writeFile encoding: 'UTF-8', file: 'Dockerfile', text: """
+                                FROM 172.18.1.22/lowcode/alpine-oraclejre8:8.202.08-slim
+                                ADD ./target/wshop-core-${VERSION}.jar /opt/wshop
+                                ENTRYPOINT ["java", "-jar","/opt/wshop"]
+                            """
+                        }
+                        stage("Docker build && image") {
+                            sh "docker build -t wshop-core:${VERSION} ."
+                            sh "docker image save wshop-core:${VERSION} | gzip > wshop-core-${VERSION}.tar.gz"
                         }
                     }
                 }
