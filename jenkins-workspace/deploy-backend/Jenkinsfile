@@ -34,7 +34,7 @@ pipeline {
                             sh "mkdir wshop-core || true"
                         }
                         stage("Checkout service") {
-                            checkout([$class: "GitSCM", branches: [[name: "*/${BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: "d345f13f-83e9-4bcd-84be-0721f3d7a552", url: "https://github.com/heshuxing/wshop-service.git"]]])
+                            checkout([$class: "GitSCM", branches: [[name: "*/${BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: "623294f4-b267-4ddf-a76a-831c04951e43", url: "https://github.com/heshuxing/wshop-service.git"]]])
                         }
                     }
                     dir("jenkins-workspace/deploy-backend/wshop-core") {
