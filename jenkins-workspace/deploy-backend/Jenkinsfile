@@ -46,6 +46,8 @@ pipeline {
                                 error "Unknow ${MODULE}"
                             }
                         }
+                    }
+                    dir("jenkins-workspace/deploy-backend/wshop-core") {
                         stage("get version") {
                             CORE_TAG = sh(returnStdout: true, script: "IFS='-' read -ra ADDR <<< \$(basename target/*.tar.gz .tar.gz); echo \${ADDR[-1]}").trim()
                             sh "echo ${CORE_TAG}"
