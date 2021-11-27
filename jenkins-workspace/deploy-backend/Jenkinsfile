@@ -14,7 +14,7 @@ pipeline {
         choice(name: "ENV", choices: ["prod"], description: "请选择升级环境名，默认为 prod")
         choice(name: "MODULE", choices: ["wshop-core"], description: "请选择要升级的模块")
         string(name: "BRANCH", defaultValue: "master", description: "请填写升级分支名, 默认为 master", trim: true)
-        string(name: "VERSION", description: "请填写版本，X.Y.Z", trim: true)
+        string(name: "VERSION", defaultValue: "0.0.1", description: "请填写版本，X.Y.Z", trim: true)
     }
     options {
         timeout(time: 100, unit: "MINUTES")
