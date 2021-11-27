@@ -22,15 +22,6 @@ pipeline {
             steps {
                 script {
                     dir("jenkins-workspace/deploy-backend") {
-                        stage("Authentication") {
-                            def userId = getBuildUser()
-                            if (params.ENV.equals("prod")) {
-                                if (!['heshuxing'].contains(userId)) {
-                                    error "该用户: $userId 没有足够的权限构建 ${ENV} 环境, 请联系管理员"
-                                }
-                            }
-                            echo "权限校验成功, 继续构建..."
-                        }
                         stage("Create build directory") {
                             if (params.ENV.equals("prod")) {
                                 remotes = [
