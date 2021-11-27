@@ -1,4 +1,4 @@
-#!/usr/bin/env groovy
+#!/usr/bin/perl
 import com.cloudbees.groovy.cps.NonCPS
 
 String packages_path = "/opt/wshop/wshop-0.0.1/images"
@@ -13,7 +13,7 @@ pipeline {
     parameters {
         choice(name: "ENV", choices: ["prod"], description: "请选择升级环境名，默认为 prod")
         choice(name: "MODULE", choices: ["wshop-core"], description: "请选择要升级的模块")
-        string(name: "BRANCH", defaultValue: "develop", description: "请填写升级分支名, 默认为 develop", trim: true)
+        string(name: "BRANCH", defaultValue: "master", description: "请填写升级分支名, 默认为 master", trim: true)
     }
     options {
         timeout(time: 100, unit: "MINUTES")
